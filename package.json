@@ -1,0 +1,44 @@
+{
+  "name": "emotions-diaty",
+  "version": "0.0.0",
+  "description": "Emotions diary telegram bot",
+  "main": "./dist/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "test": "jest",
+    "build": "swc src -d dist",
+    "watch-compile": "swc ./src/index.ts -w -d dist",
+    "watch-node": "nodemon -r dotenv/config ./dist",
+    "dev": "concurrently \"npm run watch-compile\" \"npm run watch-node\""
+  },
+  "keywords": [
+    "telegram",
+    "bot",
+    "health",
+    "diary"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "16.0.3",
+    "node-telegram-bot-api": "0.61.0"
+  },
+  "devDependencies": {
+    "@swc/cli": "^0.1.57",
+    "@swc/core": "^1.3.26",
+    "@types/node-telegram-bot-api": "0.57.6",
+    "@typescript-eslint/eslint-plugin": "^5.48.1",
+    "@typescript-eslint/parser": "^5.48.1",
+    "chokidar": "^3.5.3",
+    "concurrently": "^7.6.0",
+    "eslint": "^8.31.0",
+    "nodemon": "^2.0.20"
+  },
+  "prettier": {
+    "semi": false,
+    "singleQuote": true,
+    "trailingComma": "all",
+    "arrowParens": "avoid",
+    "endOfLine": "lf"
+  }
+}
