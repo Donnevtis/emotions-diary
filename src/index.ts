@@ -1,9 +1,10 @@
-import TelegramBot from 'node-telegram-bot-api'
+import bot from './bot'
+import { logger } from './middleware/logger'
 
-const polling = process.env.MODE === 'development'
-const token = String(process.env.BOT_TOKEN)
-const bot = new TelegramBot(token, { polling })
+const isDevMode = process.env.MODE === 'development'
 
-bot.on('message', msg => {
-  bot.sendMessage(msg.chat.id, msg.text || 'hi')
-})
+if (isDevMode) {
+  bot.launch()
+}
+
+bot.catch(error => logger.error(error))
