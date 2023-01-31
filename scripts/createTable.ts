@@ -1,12 +1,7 @@
-const {
-  DynamoDBClient,
-  CreateTableCommand,
-} = require('@aws-sdk/client-dynamodb')
+import { DynamoDBClient, CreateTableCommand } from '@aws-sdk/client-dynamodb'
+import fs from 'node:fs'
 
-const fs = require('fs')
-require('dotenv').config()
-
-const dynamodb = new DynamoDBClient({
+export const dynamodb = new DynamoDBClient({
   region: process.env.REGION,
   endpoint: process.env.DB_ENDPOINT,
 })
@@ -44,9 +39,6 @@ dynamodb
   })
   .catch(err => {
     console.error(
-      "Table wasn't created. Error JSON: ",
-      JSON.stringify(err, null, 2),
+      `Table wasn't created. Error JSON: ${JSON.stringify(err, null, 2)}`,
     )
   })
-
-module.exports = dynamodb
