@@ -11,7 +11,8 @@
     "watch-node": "nodemon -r dotenv/config ./dist",
     "dev": "concurrently \"npm run watch-compile\" \"npm run watch-node\"",
     "start": "node -r dotenv/config ./dist",
-    "lint": "eslint"
+    "lint": "eslint --cache src/**/*.ts",
+    "prepare": "husky install"
   },
   "keywords": [
     "telegram",
@@ -41,6 +42,7 @@
     "chokidar": "^3.5.3",
     "concurrently": "^7.6.0",
     "eslint": "^8.31.0",
+    "husky": "^8.0.3",
     "nodemon": "^2.0.20"
   },
   "prettier": {
