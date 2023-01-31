@@ -9,3 +9,8 @@ Here are some of the things you can do with me:
 
 If you have any issues or suggestions, just let me know by typing @hay_sup.
 `
+export const MENU_BUTTON_TEXT = 'Open'
+
+export const START = 'Start'
+
+export const OPEN_SETTINGS = 'Open settings'

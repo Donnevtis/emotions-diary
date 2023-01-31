@@ -33,10 +33,14 @@ export class LocaleService {
   }
 }
 
-export default new LocaleService({
+const localeService = new LocaleService({
   staticCatalog: {
     en,
     ru,
   },
   defaultLocale: 'en',
 })
+
+export const translate = localeService.translate.bind(localeService)
+
+export default localeService

@@ -8,3 +8,8 @@ export const GREETING = `
 Изменить настройки напоминаний /reminder
 Если в боте чего-то не хватает или что-то не работает пиши @hay_sup
 `
+export const MENU_BUTTON_TEXT = 'Открыть'
+
+export const START = 'Начать'
+
+export const OPEN_SETTINGS = 'Открыть настройки'
