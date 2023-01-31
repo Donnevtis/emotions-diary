@@ -1,5 +1,6 @@
 import bot from './bot'
 import { logger } from './middleware/logger'
+import './controllers'
 
 const isDevMode = process.env.MODE === 'development'
 

@@ -5,15 +5,19 @@ import {
   DeleteItemCommand,
   QueryCommand,
 } from '@aws-sdk/client-dynamodb'
-import TelegramBot from 'node-telegram-bot-api'
+
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb'
 import dynamodb from './client'
 import { validateUser } from '../utils/validators'
-import { stringify } from '../utils/common'
+import { errorHandler, stringify } from '../utils/common'
 import { CONDITION_CHECK_FAILED } from '../utils/constants'
-import { ChatMember } from 'telegraf/typings/core/types/typegram'
+import { ChatMember } from 'typegram'
+import { Context } from 'telegraf'
+import { User } from './database.types'
 
-export const putUser = async (userData: TelegramBot.User) => {
+const dbErrorHandler = errorHandler('Database exception')
+
+export const putUser = async (userData: Context['from']) => {
   if (!validateUser(userData)) {
     throw new Error(
       `Validation exception: invalid user data:
@@ -21,8 +25,14 @@ export const putUser = async (userData: TelegramBot.User) => {
     )
   }
 
-  const { id, first_name, last_name, username, language_code, is_bot } =
-    userData
+  const {
+    id,
+    first_name = null,
+    last_name = null,
+    username,
+    language_code,
+    is_bot,
+  } = userData
 
   try {
     return await dynamodb.send(
@@ -43,39 +53,30 @@ export const putUser = async (userData: TelegramBot.User) => {
       }),
     )
   } catch (error) {
-    if (error instanceof Error) {
-      if (error.name === CONDITION_CHECK_FAILED) {
-        return setStatus(id, 'member')
-      }
-
-      console.error(
-        'Database exception. putUser error: ',
-        stringify(error),
-        'User id: ',
-        id,
-      )
-
-      return null
+    if (error instanceof Error && error.name === CONDITION_CHECK_FAILED) {
+      return setStatus(id, 'member')
     }
 
-    throw error
+    return dbErrorHandler(error, putUser.name, userData)
   }
 }
 
 export const setStatus = (id: number, status: ChatMember['status']) =>
-  dynamodb.send(
-    new UpdateItemCommand({
-      TableName: 'Users',
-      Key: marshall({
-        PK: `user#${id}`,
-        SK: `#metadata#${id}`,
+  dynamodb
+    .send(
+      new UpdateItemCommand({
+        TableName: 'Users',
+        Key: marshall({
+          PK: `user#${id}`,
+          SK: `#metadata#${id}`,
+        }),
+        UpdateExpression: 'set status = :s',
+        ExpressionAttributeValues: marshall({
+          ':s': status,
+        }),
       }),
-      UpdateExpression: 'set status = :s',
-      ExpressionAttributeValues: marshall({
-        ':s': status,
-      }),
-    }),
-  )
+    )
+    .catch(error => dbErrorHandler(error, setStatus.name, { id, status }))
 
 //ISSUE: TransactWriteItemsCommand does not work with a single table
 export const kickUser = (id: number) => {
@@ -90,61 +91,90 @@ export const kickUser = (id: number) => {
         }),
       }),
     ),
-  ])
+  ]).catch(error => dbErrorHandler(error, kickUser.name, { id }))
 }
 
 export const updateReminderTimers = (
   id: number,
   reminder_timers: Array<number>,
+  time_offset: number,
 ) =>
-  dynamodb.send(
-    new UpdateItemCommand({
-      TableName: 'Users',
-      Key: marshall({
-        PK: `user#${id}`,
-        SK: 'reminders',
+  dynamodb
+    .send(
+      new UpdateItemCommand({
+        TableName: 'Users',
+        Key: marshall({
+          PK: `user#${id}`,
+          SK: 'reminders',
+        }),
+        UpdateExpression: 'set timers = :t, user_id = :i, time_offset = :o',
+        ExpressionAttributeValues: marshall({
+          ':t': reminder_timers,
+          ':i': id,
+          ':o': time_offset,
+        }),
       }),
-      UpdateExpression: 'set timers = :t, user_id = :i',
-      ExpressionAttributeValues: marshall({
-        ':t': reminder_timers,
-        ':i': id,
+    )
+    .catch(error =>
+      dbErrorHandler(error, updateReminderTimers.name, {
+        id,
+        reminder_timers,
+        time_offset,
       }),
-    }),
-  )
+    )
 
 export const updateLanguageSettings = (id: number, language_code: string) =>
-  dynamodb.send(
-    new UpdateItemCommand({
-      TableName: 'Users',
-      Key: marshall({
-        PK: `user#${id}`,
-        SK: `#metadata#${id}`,
+  dynamodb
+    .send(
+      new UpdateItemCommand({
+        TableName: 'Users',
+        Key: marshall({
+          PK: `user#${id}`,
+          SK: `#metadata#${id}`,
+        }),
+        UpdateExpression: 'set language_code = :l',
+        ExpressionAttributeValues: marshall({
+          ':l': language_code,
+        }),
       }),
-      UpdateExpression: 'set language_code = :l',
-      ExpressionAttributeValues: marshall({
-        ':l': language_code,
+    )
+    .catch(error =>
+      dbErrorHandler(error, updateLanguageSettings.name, {
+        id,
+        language_code,
       }),
-    }),
-  )
+    )
 
-export const addEmotion = (id: number, emotion: string) => {
-  const timestamp = Date.now()
-
-  return dynamodb.send(
-    new UpdateItemCommand({
-      TableName: 'Users',
-      Key: marshall({
-        PK: `user#${id}`,
-        SK: `emotion#${id}#${timestamp}`,
+export const addState = (
+  id: number,
+  emotion: string,
+  energy: number,
+  timestamp: number,
+) =>
+  dynamodb
+    .send(
+      new UpdateItemCommand({
+        TableName: 'Users',
+        Key: marshall({
+          PK: `user#${id}`,
+          SK: `emotion#${id}#${timestamp}`,
+        }),
+        UpdateExpression: 'set emotion = :em, energy=:en, timestamp = :t',
+        ExpressionAttributeValues: marshall({
+          ':em': emotion,
+          ':en': energy,
+          ':t': timestamp,
+        }),
       }),
-      UpdateExpression: 'set emotion = :e, timestamp = :t',
-      ExpressionAttributeValues: marshall({
-        ':e': emotion,
-        ':t': timestamp,
+    )
+    .catch(error =>
+      dbErrorHandler(error, addState.name, {
+        id,
+        emotion,
+        energy,
+        timestamp,
       }),
-    }),
-  )
-}
+    )
 
 export const getEmotionsById = async (id: number) => {
   try {
@@ -156,22 +186,15 @@ export const getEmotionsById = async (id: number) => {
           ':pk': `user#${id}`,
           ':emotion': `emotion#${id}`,
         }),
-        ProjectionExpression: 'emotion, timestamp',
+        ProjectionExpression: 'emotion, energy, timestamp',
       }),
     )
 
     return Items?.length ? Items.map(emotion => unmarshall(emotion)) : null
   } catch (error) {
-    if (error instanceof Error) {
-      console.error(
-        'Database exception. getEmotionsById error: ',
-        stringify(error),
-        'User id: ',
-        id,
-      )
-    }
-
-    throw error
+    return dbErrorHandler(error, getEmotionsById.name, {
+      id,
+    })
   }
 }
 
@@ -184,26 +207,19 @@ export const getTimerById = async (id: number) => {
           PK: `user#${id}`,
           SK: 'reminders',
         }),
-        ProjectionExpression: 'timers',
+        ProjectionExpression: 'timers, time_offset',
       }),
     )
 
     return Item ? unmarshall(Item) : null
   } catch (error) {
-    if (error instanceof Error) {
-      console.error(
-        'Database exception. getEmotionsById error: ',
-        stringify(error),
-        'User id: ',
-        id,
-      )
-    }
-
-    throw error
+    return dbErrorHandler(error, getTimerById.name, {
+      id,
+    })
   }
 }
 
-export const getUser = async (id: number) => {
+export const getUser = async (id: number): Promise<User | null> => {
   try {
     const { Item } = await dynamodb.send(
       new GetItemCommand({
@@ -215,18 +231,11 @@ export const getUser = async (id: number) => {
       }),
     )
 
-    return Item ? unmarshall(Item) : null
+    return Item ? (unmarshall(Item) as User) : null
   } catch (error) {
-    if (error instanceof Error) {
-      console.error(
-        'Database exception. getUser error: ',
-        stringify(error),
-        'User id: ',
-        id,
-      )
-    }
-
-    throw error
+    return dbErrorHandler(error, getUser.name, {
+      id,
+    })
   }
 }
 
@@ -249,15 +258,8 @@ export const findUsersByTimer = async (time: number) => {
 
     return Items?.length ? Items.map(user => unmarshall(user)) : null
   } catch (error) {
-    if (error instanceof Error) {
-      console.error(
-        'Database exception. findUsersByTimer error: ',
-        stringify(error),
-        'Time: ',
-        time,
-      )
-    }
-
-    throw error
+    return dbErrorHandler(error, findUsersByTimer.name, {
+      time,
+    })
   }
 }
