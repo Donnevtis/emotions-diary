@@ -13,8 +13,9 @@
     "start": "node -r dotenv/config ./dist",
     "lint": "eslint --cache src/**/*.ts",
     "prepare": "husky install",
-    "deploy": "tsx scripts/deploy",
-    "webhook": "tsx scripts/webhook.ts"
+    "webhook": "tsx scripts/webhook.ts",
+    "publish": "tsx scripts/deploy",
+    "deploy": "npm run build && npm run publish && npm run webhook"
   },
   "keywords": [
     "telegram",
@@ -42,10 +43,11 @@
     "@types/dotenv-parse-variables": "^2.0.1",
     "@types/i18n": "^0.13.6",
     "@types/node": "^18.11.18",
+    "@types/node-fetch": "^2.6.2",
     "@typescript-eslint/eslint-plugin": "^5.48.1",
     "@typescript-eslint/parser": "^5.48.1",
     "@yandex-cloud/function-types": "^2.1.0",
-    "@yandex-cloud/nodejs-sdk": "^2.3.2",
+    "@yandex-cloud/nodejs-sdk": "2.3.2",
     "archiver": "^5.3.1",
     "chokidar": "^3.5.3",
     "cli-spinners": "^2.7.0",

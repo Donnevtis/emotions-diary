@@ -9,7 +9,7 @@ import {
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb'
 import dynamodb from './client'
 import { validateUser } from '../utils/validators'
-import { errorHandler, stringify } from '../utils/common'
+import { errorHandler } from '../utils/common'
 import { CONDITION_CHECK_FAILED } from '../utils/constants'
 import { ChatMember } from 'typegram'
 import { Context } from 'telegraf'
@@ -21,7 +21,7 @@ export const putUser = async (userData: Context['from']) => {
   if (!validateUser(userData)) {
     throw new Error(
       `Validation exception: invalid user data:
-        ${stringify(validateUser.errors)}`,
+        ${JSON.stringify(validateUser.errors)}`,
     )
   }
 
@@ -35,23 +35,23 @@ export const putUser = async (userData: Context['from']) => {
   } = userData
 
   try {
-    return await dynamodb.send(
-      new PutItemCommand({
-        TableName: 'Users',
-        Item: marshall({
-          PK: `user#${id}`,
-          SK: `#metadata#${id}`,
-          first_name,
-          last_name,
-          username,
-          is_bot,
-          registration_date: Date.now(),
-          language_code,
-          status: 'member',
-        }),
-        ConditionExpression: 'attribute_not_exists(SK)',
+    const input = new PutItemCommand({
+      TableName: 'Users',
+      Item: marshall({
+        PK: `user#${id}`,
+        SK: `#metadata#${id}`,
+        first_name,
+        last_name,
+        username,
+        is_bot,
+        registration_date: Date.now(),
+        language_code,
+        status: 'member',
       }),
-    )
+      ConditionExpression: 'attribute_not_exists(SK)',
+    })
+
+    return await dynamodb.send(input)
   } catch (error) {
     if (error instanceof Error && error.name === CONDITION_CHECK_FAILED) {
       return setStatus(id, 'member')
@@ -80,18 +80,17 @@ export const setStatus = (id: number, status: ChatMember['status']) =>
 
 //ISSUE: TransactWriteItemsCommand does not work with a single table
 export const kickUser = (id: number) => {
-  return Promise.all([
-    setStatus(id, 'kicked'),
-    dynamodb.send(
-      new DeleteItemCommand({
-        TableName: 'Users',
-        Key: marshall({
-          PK: `user#${id}`,
-          SK: 'reminders',
-        }),
-      }),
-    ),
-  ]).catch(error => dbErrorHandler(error, kickUser.name, { id }))
+  const input = new DeleteItemCommand({
+    TableName: 'Users',
+    Key: marshall({
+      PK: `user#${id}`,
+      SK: 'reminders',
+    }),
+  })
+
+  return Promise.all([setStatus(id, 'kicked'), dynamodb.send(input)]).catch(
+    error => dbErrorHandler(error, kickUser.name, { id }),
+  )
 }
 
 export const updateReminderTimers = (
@@ -178,17 +177,17 @@ export const addState = (
 
 export const getEmotionsById = async (id: number) => {
   try {
-    const { Items } = await dynamodb.send(
-      new QueryCommand({
-        TableName: 'Users',
-        KeyConditionExpression: 'PK = :pk AND begins_with(SK, :emotion)',
-        ExpressionAttributeValues: marshall({
-          ':pk': `user#${id}`,
-          ':emotion': `emotion#${id}`,
-        }),
-        ProjectionExpression: 'emotion, energy, timestamp',
+    const input = new QueryCommand({
+      TableName: 'Users',
+      KeyConditionExpression: 'PK = :pk AND begins_with(SK, :emotion)',
+      ExpressionAttributeValues: marshall({
+        ':pk': `user#${id}`,
+        ':emotion': `emotion#${id}`,
       }),
-    )
+      ProjectionExpression: 'emotion, energy, timestamp',
+    })
+
+    const { Items } = await dynamodb.send(input)
 
     return Items?.length ? Items.map(emotion => unmarshall(emotion)) : null
   } catch (error) {
@@ -200,16 +199,16 @@ export const getEmotionsById = async (id: number) => {
 
 export const getTimerById = async (id: number) => {
   try {
-    const { Item } = await dynamodb.send(
-      new GetItemCommand({
-        TableName: 'Users',
-        Key: marshall({
-          PK: `user#${id}`,
-          SK: 'reminders',
-        }),
-        ProjectionExpression: 'timers, time_offset',
+    const input = new GetItemCommand({
+      TableName: 'Users',
+      Key: marshall({
+        PK: `user#${id}`,
+        SK: 'reminders',
       }),
-    )
+      ProjectionExpression: 'timers, time_offset',
+    })
+
+    const { Item } = await dynamodb.send(input)
 
     return Item ? unmarshall(Item) : null
   } catch (error) {
@@ -221,15 +220,15 @@ export const getTimerById = async (id: number) => {
 
 export const getUser = async (id: number): Promise<User | null> => {
   try {
-    const { Item } = await dynamodb.send(
-      new GetItemCommand({
-        TableName: 'Users',
-        Key: marshall({
-          PK: `user#${id}`,
-          SK: `#metadata#${id}`,
-        }),
+    const input = new GetItemCommand({
+      TableName: 'Users',
+      Key: marshall({
+        PK: `user#${id}`,
+        SK: `#metadata#${id}`,
       }),
-    )
+    })
+
+    const { Item } = await dynamodb.send(input)
 
     return Item ? (unmarshall(Item) as User) : null
   } catch (error) {
@@ -241,20 +240,20 @@ export const getUser = async (id: number): Promise<User | null> => {
 
 export const findUsersByTimer = async (time: number) => {
   try {
-    const { Items } = await dynamodb.send(
-      new QueryCommand({
-        TableName: 'Users',
-        IndexName: 'InvertedIndex',
-        KeyConditionExpression: 'begins_with(SK, :sk)',
-        FilterExpression: 'contains(timers, :t)',
-        ExpressionAttributeValues: marshall({
-          ':sk': 'reminders',
-          ':t': time,
-        }),
-        ProjectionExpression: 'user_id',
-        ScanIndexForward: true,
+    const input = new QueryCommand({
+      TableName: 'Users',
+      IndexName: 'InvertedIndex',
+      KeyConditionExpression: 'begins_with(SK, :sk)',
+      FilterExpression: 'contains(timers, :t)',
+      ExpressionAttributeValues: marshall({
+        ':sk': 'reminders',
+        ':t': time,
       }),
-    )
+      ProjectionExpression: 'user_id',
+      ScanIndexForward: true,
+    })
+
+    const { Items } = await dynamodb.send(input)
 
     return Items?.length ? Items.map(user => unmarshall(user)) : null
   } catch (error) {

@@ -5,6 +5,8 @@ import dotenvParseVariables from 'dotenv-parse-variables'
 import { spinner, MiBtoByte } from '../utils.js'
 import { Env } from '../../.env-types.js'
 
+spinner.start()
+
 const { error: envError, parsed } = dotenv.config({})
 
 if (envError || !parsed) throw envError
@@ -21,14 +23,22 @@ const session = new Session({ oauthToken: String(process.env.OAUTH_TOKEN) })
 
 const cloudService = session.client(serviceClients.FunctionServiceClient)
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const { DEV, FUNCTION_ID, OAUTH_TOKEN, WEBHOOK_URL, ...envs } = environment
-
-spinner.start()
+const {
+  WEB_APP_URL,
+  FUNCTION_ID,
+  SA_ID,
+  DB_ENDPOINT,
+  BOT_TOKEN,
+  REGION,
+  LOCKBOX_ID,
+  LOCKBOX_VERSION,
+} = environment
 
 try {
   const { content, pointer } = await getZipBuffer('./dist')
+
   spinner.succeed(`Zip buffer size ${pointer}Byte`)
+  spinner.start()
 
   const { id, description, createdAt } = await cloudService.createVersion(
     CreateFunctionVersionRequest.fromPartial({
@@ -40,7 +50,28 @@ try {
         memory: MiBtoByte(128),
       },
       executionTimeout: { seconds: 60 },
-      environment: { DEV: 'false', ...envs },
+      environment: {
+        DEV: 'false',
+        WEB_APP_URL,
+        DB_ENDPOINT,
+        BOT_TOKEN,
+        REGION,
+      },
+      serviceAccountId: SA_ID,
+      secrets: [
+        {
+          id: LOCKBOX_ID,
+          versionId: LOCKBOX_VERSION,
+          environmentVariable: 'AWS_ACCESS_KEY_ID',
+          key: 'SA_KEY_ID',
+        },
+        {
+          id: LOCKBOX_ID,
+          versionId: LOCKBOX_VERSION,
+          environmentVariable: 'AWS_SECRET_ACCESS_KEY',
+          key: 'SA_KEY_SECRET',
+        },
+      ],
     }),
   )
 

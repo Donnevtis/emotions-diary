@@ -9,4 +9,7 @@ export type Env = {
   OAUTH_TOKEN: string
   FUNCTION_ID: string
   WEBHOOK_URL: string
+  SA_ID: string
+  LOCKBOX_ID: string
+  LOCKBOX_VERSION: string
 }
