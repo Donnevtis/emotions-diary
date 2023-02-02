@@ -1,6 +1,5 @@
 import pino from 'pino'
 import { Context, deunionize } from 'telegraf'
-import { stringify } from '../utils/common'
 import { PromiseNoop } from './types'
 
 export const logger = pino({
@@ -14,7 +13,7 @@ export default async (
   next: PromiseNoop,
 ) => {
   logger.info(
-    stringify({
+    JSON.stringify({
       id: from?.id,
       username: from?.username,
       text: message && deunionize(message).text,

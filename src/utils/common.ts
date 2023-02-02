@@ -1,16 +1,13 @@
 import { Context } from 'telegraf'
 
-export const stringify = (value: Parameters<JSON['stringify']>[0]) =>
-  JSON.stringify(value, null, 2)
-
 export const errorHandler =
   (typeException: string) => (error: unknown, method: string, data: object) => {
     if (error instanceof Error) {
       console.error(
         `${typeException}. ${method} error: `,
-        stringify(error),
+        JSON.stringify(error),
         'Data: ',
-        stringify(data),
+        JSON.stringify(data),
       )
 
       return null

@@ -2,7 +2,7 @@ import bot from '../bot'
 import { getEmotionsById, putUser } from '../database'
 import { translate as t } from '../services/localeService'
 import { PATHS } from '../types'
-import { getId, getTypedEnv, isDev, stringify } from '../utils/common'
+import { getId, getTypedEnv, isDev } from '../utils/common'
 
 const webAppUrl = isDev
   ? getTypedEnv<string>('WEB_APP_URL_DEV')
@@ -10,7 +10,7 @@ const webAppUrl = isDev
 const settingsUrl = new URL(PATHS.settings, webAppUrl).toString()
 
 bot.start(async ctx => {
-  putUser(ctx.from)
+  await putUser(ctx.from)
 
   ctx.reply(t('GREETING'), {
     reply_markup: {
@@ -29,14 +29,14 @@ bot.command('weeklyreport', async ctx => {
   const id = getId(ctx)
   const report = await getEmotionsById(id)
 
-  ctx.reply(stringify(report))
+  ctx.reply(JSON.stringify(report))
 })
 
 bot.command('monthlyreport', async ctx => {
   const id = getId(ctx)
   const report = await getEmotionsById(id)
 
-  ctx.reply(stringify(report))
+  ctx.reply(JSON.stringify(report))
 })
 
 bot.command('reminder', async ctx =>
