@@ -11,3 +11,10 @@ export type User = {
   language_code: string
   status: ChatMember['status']
 }
+
+export type UserTimersSettings = {
+  id: number
+  reminder_timers: Array<string>
+  time_offset: number
+  notify: boolean
+}

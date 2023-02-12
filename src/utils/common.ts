@@ -1,13 +1,12 @@
-import { Context } from 'telegraf'
+import { logger } from '../middleware/logger'
 
 export const errorHandler =
   (typeException: string) => (error: unknown, method: string, data: object) => {
     if (error instanceof Error) {
-      console.error(
-        `${typeException}. ${method} error: `,
-        JSON.stringify(error),
-        'Data: ',
-        JSON.stringify(data),
+      logger.error(
+        `${typeException}. ${method}: ${error.message}. Cause: ${
+          error.cause
+        }. Data: ${JSON.stringify(data)} `,
       )
 
       return null
@@ -39,13 +38,3 @@ export const getTypedEnv = <T extends string | number | boolean>(
 }
 
 export const isDev = <boolean>getTypedEnv('DEV')
-
-export const getId = (ctx: Context) => {
-  const id = ctx.from?.id
-
-  if (id === void 0) {
-    throw new Error(`User ID not found. Update id: ${ctx.update.update_id}`)
-  }
-
-  return id
-}

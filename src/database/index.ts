@@ -4,25 +4,78 @@ import {
   UpdateItemCommand,
   DeleteItemCommand,
   QueryCommand,
+  QueryOutput,
 } from '@aws-sdk/client-dynamodb'
 
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb'
 import dynamodb from './client'
-import { validateUser } from '../utils/validators'
+import {
+  validateSettings,
+  validateState,
+  validateStatus,
+  validateUser,
+} from '../utils/validators'
 import { errorHandler } from '../utils/common'
-import { CONDITION_CHECK_FAILED } from '../utils/constants'
-import { ChatMember } from 'typegram'
-import { Context } from 'telegraf'
-import { User } from './database.types'
+import { ChatMemberStatus, RecievedUser, UserState } from '../types'
+import { StoredUser, UserTimersSettings } from '../types'
+import crypto from 'node:crypto'
+
+const CONDITION_CHECK_FAILED = 'ConditionalCheckFailedException'
 
 const dbErrorHandler = errorHandler('Database exception')
 
-export const putUser = async (userData: Context['from']) => {
-  if (!validateUser(userData)) {
-    throw new Error(
-      `Validation exception: invalid user data:
-        ${JSON.stringify(validateUser.errors)}`,
-    )
+export const getUser = async (id: number): Promise<StoredUser | null> => {
+  try {
+    const input = new GetItemCommand({
+      TableName: 'Users',
+      Key: marshall({
+        PK: `user#${id}`,
+        SK: `#metadata#${id}`,
+      }),
+    })
+
+    const { Item } = await dynamodb.send(input)
+
+    return Item ? (unmarshall(Item) as StoredUser) : null
+  } catch (error) {
+    return dbErrorHandler(error, getUser.name, {
+      id,
+    })
+  }
+}
+
+export const findUsersByTimer = async (time: string) => {
+  try {
+    const input = new QueryCommand({
+      TableName: 'Users',
+      IndexName: 'InvertedIndex',
+      KeyConditionExpression: 'SK = :sk',
+      FilterExpression: 'contains(reminder_timers, :t)',
+      ExpressionAttributeValues: marshall({
+        ':sk': 'reminders',
+        ':t': time,
+      }),
+      Select: 'SPECIFIC_ATTRIBUTES',
+      ProjectionExpression: 'user_id, notify, time_offset',
+    })
+
+    const { Items } = await dynamodb.send(input)
+
+    return Items?.length
+      ? (Items.map(user => unmarshall(user)) as UserTimersSettings[])
+      : null
+  } catch (error) {
+    return dbErrorHandler(error, findUsersByTimer.name, {
+      time,
+    })
+  }
+}
+
+export const putUser = async (user: RecievedUser) => {
+  if (!validateUser(user)) {
+    throw new Error('Validation exception: invalid user data', {
+      cause: validateUser.errors,
+    })
   }
 
   const {
@@ -32,7 +85,7 @@ export const putUser = async (userData: Context['from']) => {
     username,
     language_code,
     is_bot,
-  } = userData
+  } = user
 
   try {
     const input = new PutItemCommand({
@@ -40,6 +93,7 @@ export const putUser = async (userData: Context['from']) => {
       Item: marshall({
         PK: `user#${id}`,
         SK: `#metadata#${id}`,
+        id,
         first_name,
         last_name,
         username,
@@ -57,11 +111,17 @@ export const putUser = async (userData: Context['from']) => {
       return setStatus(id, 'member')
     }
 
-    return dbErrorHandler(error, putUser.name, userData)
+    return dbErrorHandler(error, putUser.name, user)
   }
 }
 
-export const setStatus = (id: number, status: ChatMember['status']) =>
+export const setStatus = (id: number, status: ChatMemberStatus) => {
+  if (!validateStatus(status)) {
+    throw new Error('Validation exception: invalid status', {
+      cause: validateUser.errors,
+    })
+  }
+
   dynamodb
     .send(
       new UpdateItemCommand({
@@ -77,6 +137,7 @@ export const setStatus = (id: number, status: ChatMember['status']) =>
       }),
     )
     .catch(error => dbErrorHandler(error, setStatus.name, { id, status }))
+}
 
 //ISSUE: TransactWriteItemsCommand does not work with a single table
 export const kickUser = (id: number) => {
@@ -93,12 +154,38 @@ export const kickUser = (id: number) => {
   )
 }
 
-export const updateReminderTimers = (
-  id: number,
-  reminder_timers: Array<number>,
-  time_offset: number,
-) =>
-  dynamodb
+export const getSettingsById = async (id: number) => {
+  try {
+    const input = new GetItemCommand({
+      TableName: 'Users',
+      Key: marshall({
+        PK: `user#${id}`,
+        SK: 'reminders',
+      }),
+      ProjectionExpression:
+        'reminder_timers, time_offset, notify, language_code',
+    })
+
+    const { Item } = await dynamodb.send(input)
+
+    return Item ? (unmarshall(Item) as UserTimersSettings) : null
+  } catch (error) {
+    return dbErrorHandler(error, getSettingsById.name, {
+      id,
+    })
+  }
+}
+
+export const updateSettings = (id: number, settings: UserTimersSettings) => {
+  if (!validateSettings(settings)) {
+    throw new Error('Validation exception: invalid user settings', {
+      cause: validateSettings.errors,
+    })
+  }
+
+  const { reminder_timers, time_offset, notify, language_code } = settings
+
+  return dynamodb
     .send(
       new UpdateItemCommand({
         TableName: 'Users',
@@ -106,21 +193,25 @@ export const updateReminderTimers = (
           PK: `user#${id}`,
           SK: 'reminders',
         }),
-        UpdateExpression: 'set timers = :t, user_id = :i, time_offset = :o',
+        UpdateExpression:
+          'set reminder_timers = :r, user_id = :u, time_offset = :t, notify = :n, language_code = :l',
         ExpressionAttributeValues: marshall({
-          ':t': reminder_timers,
-          ':i': id,
-          ':o': time_offset,
+          ':r': reminder_timers,
+          ':t': time_offset,
+          ':n': notify,
+          ':u': id,
+          ':l': language_code,
         }),
       }),
     )
     .catch(error =>
-      dbErrorHandler(error, updateReminderTimers.name, {
+      dbErrorHandler(error, updateSettings.name, {
         id,
         reminder_timers,
         time_offset,
       }),
     )
+}
 
 export const updateLanguageSettings = (id: number, language_code: string) =>
   dynamodb
@@ -144,25 +235,73 @@ export const updateLanguageSettings = (id: number, language_code: string) =>
       }),
     )
 
-export const addState = (
+export const getStateById = async (
   id: number,
-  emotion: string,
-  energy: number,
-  timestamp: number,
-) =>
-  dynamodb
+  start = '0',
+  end = Date.now().toString(),
+  ExclusiveStartKey?: QueryOutput['LastEvaluatedKey'],
+) => {
+  try {
+    const input = new QueryCommand({
+      TableName: 'Users',
+      KeyConditionExpression: 'PK = :pk and SK BETWEEN :start AND :end',
+      ExpressionAttributeValues: marshall({
+        ':pk': `user#${id}#state`,
+        ':start': start,
+        ':end': end,
+      }),
+      ProjectionExpression: 'state_id, emotion, energy, timestamp, timezone',
+      ScanIndexForward: false,
+      ExclusiveStartKey,
+    })
+
+    const { Items, LastEvaluatedKey } = await dynamodb.send(input)
+
+    const states = Items?.length
+      ? (Items.map(emotion => unmarshall(emotion)) as UserState[])
+      : null
+
+    if (LastEvaluatedKey) {
+      const recursionStates = await getStateById(
+        id,
+        start,
+        end,
+        LastEvaluatedKey,
+      )
+      if (recursionStates) {
+        states?.push(...recursionStates)
+      }
+    }
+
+    return states
+  } catch (error) {
+    return dbErrorHandler(error, getStateById.name, {
+      id,
+    })
+  }
+}
+
+export const addState = (id: number, state: UserState) => {
+  if (!validateState(state)) {
+    throw new Error('Validation exception: invalid state data', {
+      cause: validateState.errors,
+    })
+  }
+
+  const { timestamp, emotion, energy, timezone } = state
+
+  return dynamodb
     .send(
-      new UpdateItemCommand({
+      new PutItemCommand({
         TableName: 'Users',
-        Key: marshall({
-          PK: `user#${id}`,
-          SK: `emotion#${id}#${timestamp}`,
-        }),
-        UpdateExpression: 'set emotion = :em, energy=:en, timestamp = :t',
-        ExpressionAttributeValues: marshall({
-          ':em': emotion,
-          ':en': energy,
-          ':t': timestamp,
+        Item: marshall({
+          PK: `user#${id}#state`,
+          SK: String(timestamp),
+          state_id: crypto.randomUUID(),
+          emotion,
+          energy,
+          timestamp,
+          timezone,
         }),
       }),
     )
@@ -174,91 +313,38 @@ export const addState = (
         timestamp,
       }),
     )
-
-export const getEmotionsById = async (id: number) => {
-  try {
-    const input = new QueryCommand({
-      TableName: 'Users',
-      KeyConditionExpression: 'PK = :pk AND begins_with(SK, :emotion)',
-      ExpressionAttributeValues: marshall({
-        ':pk': `user#${id}`,
-        ':emotion': `emotion#${id}`,
-      }),
-      ProjectionExpression: 'emotion, energy, timestamp',
-    })
-
-    const { Items } = await dynamodb.send(input)
-
-    return Items?.length ? Items.map(emotion => unmarshall(emotion)) : null
-  } catch (error) {
-    return dbErrorHandler(error, getEmotionsById.name, {
-      id,
-    })
-  }
 }
 
-export const getTimerById = async (id: number) => {
-  try {
-    const input = new GetItemCommand({
-      TableName: 'Users',
-      Key: marshall({
-        PK: `user#${id}`,
-        SK: 'reminders',
-      }),
-      ProjectionExpression: 'timers, time_offset',
-    })
-
-    const { Item } = await dynamodb.send(input)
-
-    return Item ? unmarshall(Item) : null
-  } catch (error) {
-    return dbErrorHandler(error, getTimerById.name, {
-      id,
+export const updateState = (id: number, state: UserState) => {
+  if (!validateState(state)) {
+    throw new Error('Validation exception: invalid state data', {
+      cause: validateState.errors,
     })
   }
-}
 
-export const getUser = async (id: number): Promise<User | null> => {
-  try {
-    const input = new GetItemCommand({
-      TableName: 'Users',
-      Key: marshall({
-        PK: `user#${id}`,
-        SK: `#metadata#${id}`,
+  const { timestamp, emotion, energy } = state
+
+  return dynamodb
+    .send(
+      new UpdateItemCommand({
+        TableName: 'Users',
+        Key: marshall({
+          PK: `user#${id}#state`,
+          SK: String(timestamp),
+        }),
+        UpdateExpression: 'set emotion = :em, energy = :en',
+        ExpressionAttributeValues: marshall({
+          ':em': emotion,
+          ':en': energy,
+        }),
       }),
-    })
-
-    const { Item } = await dynamodb.send(input)
-
-    return Item ? (unmarshall(Item) as User) : null
-  } catch (error) {
-    return dbErrorHandler(error, getUser.name, {
-      id,
-    })
-  }
-}
-
-export const findUsersByTimer = async (time: number) => {
-  try {
-    const input = new QueryCommand({
-      TableName: 'Users',
-      IndexName: 'InvertedIndex',
-      KeyConditionExpression: 'begins_with(SK, :sk)',
-      FilterExpression: 'contains(timers, :t)',
-      ExpressionAttributeValues: marshall({
-        ':sk': 'reminders',
-        ':t': time,
+    )
+    .catch(error =>
+      dbErrorHandler(error, addState.name, {
+        id,
+        emotion,
+        energy,
+        timestamp,
       }),
-      ProjectionExpression: 'user_id',
-      ScanIndexForward: true,
-    })
-
-    const { Items } = await dynamodb.send(input)
-
-    return Items?.length ? Items.map(user => unmarshall(user)) : null
-  } catch (error) {
-    return dbErrorHandler(error, findUsersByTimer.name, {
-      time,
-    })
-  }
+    )
 }

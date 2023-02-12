@@ -14,3 +14,11 @@ export const MENU_BUTTON_TEXT = 'Open'
 export const START = 'Start'
 
 export const OPEN_SETTINGS = 'Open settings'
+
+export const SAVED = 'Status recorded:'
+
+export const FELT = 'You have felt'
+
+export const ENERGY = 'Energy'
+
+export const SORRY = 'Sorry, an unexpected error has occurred.'

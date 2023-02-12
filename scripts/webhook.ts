@@ -5,7 +5,7 @@ dotenv.config()
 
 spinner.start()
 
-const webHookUrl = String(process.env.WEBHOOK_URL)
+const webHookUrl = String(process.env.BOT_URL)
 const token = String(process.env.BOT_TOKEN)
 const { telegram } = new Telegraf(token, { handlerTimeout: 10 })
 

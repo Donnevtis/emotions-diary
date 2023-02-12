@@ -1,14 +1,9 @@
 export type Env = {
-  BOT_TOKEN: string
-  MODE: string
   DEV: boolean
-  DB_ENDPOINT: string
-  REGION: string
-  WEB_APP_URL: string
-  WEB_APP_URL_DEV: string
   OAUTH_TOKEN: string
   FUNCTION_ID: string
-  WEBHOOK_URL: string
+  BOT_TOKEN: string
+  BOT_URL: string
   SA_ID: string
   LOCKBOX_ID: string
   LOCKBOX_VERSION: string

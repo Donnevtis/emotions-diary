@@ -1,5 +1,6 @@
 import { Telegram } from 'telegraf'
 import { getTypedEnv } from '../utils/common'
+import { translate as t } from '../services/localeService'
 
 const token = getTypedEnv<string>('BOT_TOKEN')
 
@@ -10,14 +11,15 @@ type Data = {
   emotion: string
   energy: number
   timestamp: number
-  time_zone_offset: number
+  timezone: string
 }
 
-export const answerWebApp = async ({ query_id, emotion }: Data) => {
-  await telegram.answerWebAppQuery(query_id, {
+export const answerWebApp = ({ query_id, emotion, energy }: Data) =>
+  telegram.answerWebAppQuery(query_id, {
     type: 'article',
     id: query_id,
-    title: 'message',
-    input_message_content: { message_text: emotion },
+    title: t('SAVED'),
+    input_message_content: {
+      message_text: `${t('FELT')} ${emotion}. ${t('ENERGY')}: ${energy}`,
+    },
   })
-}

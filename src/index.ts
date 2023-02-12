@@ -30,13 +30,11 @@ export const handler: Handler = async (event, context) => {
 
   if (!body) return answer(400)
 
-  if (apiGateway?.operationContext?.web_data) {
-    const data = JSON.parse(Buffer.from(body, 'base64').toString())
-
+  if (apiGateway?.operationContext?.webData) {
     try {
-      await answerWebApp(data)
+      await answerWebApp(JSON.parse(body))
     } catch (error) {
-      webDataHandlerError(error, answerWebApp.name, { data })
+      webDataHandlerError(error, answerWebApp.name, { body })
 
       return answer(400)
     }

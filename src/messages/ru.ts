@@ -13,3 +13,11 @@ export const MENU_BUTTON_TEXT = 'Открыть'
 export const START = 'Начать'
 
 export const OPEN_SETTINGS = 'Открыть настройки'
+
+export const SAVED = 'Состояние записано:'
+
+export const FELT = 'Вы чувствовали'
+
+export const ENERGY = 'Энергия'
+
+export const SORRY = 'Извините, произошла неожиданная ошибка.'

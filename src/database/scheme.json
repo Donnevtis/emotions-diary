@@ -1,7 +1,7 @@
 {
   "$metadata": {
     "httpStatusCode": 200,
-    "requestId": "17c361a7-c5a3-4f50-8971-406284ff8648",
+    "requestId": "03179ba7-41ba-4b9a-85c1-c43952654f95",
     "attempts": 1,
     "totalRetryDelay": 0
   },
@@ -16,7 +16,7 @@
         "AttributeType": "S"
       }
     ],
-    "CreationDateTime": "2023-01-28T22:08:52.340Z",
+    "CreationDateTime": "2023-02-06T21:57:28.870Z",
     "GlobalSecondaryIndexes": [
       {
         "IndexName": "InvertedIndex",

@@ -1,7 +1,18 @@
 import { Handler } from '@yandex-cloud/function-types'
 
 export enum PATHS {
-  settings = 'settings',
+  user = '/user',
+  status = '/user/status',
+  settings = '/settings',
+  state = '/state',
+  report = '/report',
+}
+
+export enum Command {
+  getState = 'getState',
+  getSettings = 'getSettings',
+  putState = 'putState',
+  updateSettigns = 'updateSettings',
 }
 
 type HandlerParameters = Parameters<Handler.Http>
@@ -9,7 +20,10 @@ type HandlerParameters = Parameters<Handler.Http>
 type RequestContext = {
   requestContext: {
     apiGateway?: {
-      operationContext?: { web_data?: boolean }
+      operationContext?: { webData?: boolean; command?: Command }
+    }
+    authorizer?: {
+      userId?: number
     }
   }
 }
@@ -23,3 +37,47 @@ export type Handler = (
   event: HandlerParameters[0] & RequestContext,
   context: HandlerParameters[1],
 ) => Promise<Return>
+
+export type UserState = {
+  emotion: string
+  energy: number
+  timestamp: number
+  timezone: string
+  state_id?: string
+}
+
+export type ChatMemberStatus =
+  | 'creator'
+  | 'administrator'
+  | 'member'
+  | 'restricted'
+  | 'left'
+  | 'kicked'
+
+export type RecievedUser = {
+  id: number
+  username?: string
+  first_name?: string
+  last_name?: string
+  is_bot?: boolean
+  language_code?: string
+  status?: ChatMemberStatus
+}
+
+export type StoreUserInfo = {
+  PK: string
+  SK: string
+  registration_date: number
+}
+
+export type StoredUser = RecievedUser & StoreUserInfo
+
+export type UserTimersSettings = {
+  user_id: number
+  reminder_timers: Array<string>
+  time_offset: number
+  notify: boolean
+  language_code: string
+}
+
+export type Ranges = { start?: number; end?: number }
