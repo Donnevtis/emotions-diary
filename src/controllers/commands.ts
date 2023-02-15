@@ -16,7 +16,7 @@ bot.start(async ctx => {
           {
             text: t('START'),
             web_app: {
-              url: createURL(id),
+              url: createURL(id, undefined, { start: true }),
             },
           },
         ],

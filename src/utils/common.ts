@@ -38,10 +38,21 @@ export const getTypedEnv = <T extends keyof Env>(envName: T): Env[T] => {
 
 export const isDev = getTypedEnv('DEV')
 
-export const createURL = (id: number | undefined, path = '/') => {
+export const createURL = (
+  id: number | undefined,
+  path = '/',
+  searchParams?: Record<string, string | boolean | number>,
+) => {
   if (!id) {
     throw new Error('ID undefined')
   }
+  const url = new URLWithToken({ id }, path, getTypedEnv('WEB_APP_URL'))
 
-  return new URLWithToken({ id }, path, getTypedEnv('WEB_APP_URL')).toString()
+  if (searchParams) {
+    Object.entries(searchParams).forEach(([key, value]) =>
+      url.searchParams.set(key, String(value)),
+    )
+  }
+
+  return url.toString()
 }
