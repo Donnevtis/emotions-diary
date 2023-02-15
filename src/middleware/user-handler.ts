@@ -1,6 +1,6 @@
 import { Context } from 'telegraf'
-import { setStatus } from '../database/'
-import localeService from '../services/localeService'
+import { setStatus } from '../database'
+import localeService from '../services/locale'
 import { PromiseNoop } from './types'
 
 export default async ({ myChatMember, from }: Context, next: PromiseNoop) => {

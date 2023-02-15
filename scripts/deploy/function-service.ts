@@ -1,5 +1,5 @@
 import { Session, cloudApi, serviceClients } from '@yandex-cloud/nodejs-sdk'
-import getZipBuffer from './contentBuffer.js'
+import getZipBuffer from './content-buffer.js'
 import { spinner } from '../utils.js'
 import { FunctionConfig } from './types.js'
 

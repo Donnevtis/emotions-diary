@@ -2,8 +2,9 @@ import bot from './bot'
 import { logger } from './middleware/logger'
 import './controllers'
 import { errorHandler, isDev } from './utils/common'
-import { Handler } from './types'
-import { answerWebApp } from './controllers/webData'
+import { Handler, WebData } from './types'
+import { answerWebApp } from './controllers/web-data'
+import localeService from './services/locale'
 
 if (isDev) {
   bot.launch()
@@ -18,21 +19,23 @@ const answer = (statusCode: number, body = '') => ({
   body,
 })
 
-export let IAM_TOKEN: string | undefined
-
-export const handler: Handler = async (event, context) => {
-  IAM_TOKEN = context.token?.access_token
-
-  const {
-    body,
-    requestContext: { apiGateway },
-  } = event
-
+export const handler: Handler = async ({
+  body,
+  requestContext: { apiGateway, authorizer },
+}) => {
   if (!body) return answer(400)
 
   if (apiGateway?.operationContext?.webData) {
+    const data = JSON.parse(body) as WebData
+    const userId = authorizer?.userId
+    localeService.locale = data.language_code
+
     try {
-      await answerWebApp(JSON.parse(body))
+      if (!userId) {
+        throw new Error('ID not found')
+      }
+
+      await answerWebApp(userId, data)
     } catch (error) {
       webDataHandlerError(error, answerWebApp.name, { body })
 

@@ -13,7 +13,7 @@ const createUrlWithId = (id: number, baseurl: string, path = '/') => {
 }
 
 export const getReport = (
-  user_id: number,
+  user_id: number | undefined,
   type: 'xlsx' | 'pdf',
   lang = 'en',
   { start, end }: Ranges,
@@ -22,11 +22,7 @@ export const getReport = (
     throw new Error('User id not found')
   }
 
-  const url = createUrlWithId(
-    user_id,
-    getTypedEnv<string>('BOT_URL'),
-    PATHS.report,
-  )
+  const url = createUrlWithId(user_id, getTypedEnv('BOT_URL'), PATHS.report)
   url.searchParams.append('type', type)
   url.searchParams.append('lang', lang)
   start !== void 0 && url.searchParams.append('start', String(start))

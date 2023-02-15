@@ -6,6 +6,7 @@ export enum PATHS {
   settings = '/settings',
   state = '/state',
   report = '/report',
+  history = '/history',
 }
 
 export enum Command {
@@ -81,3 +82,21 @@ export type UserTimersSettings = {
 }
 
 export type Ranges = { start?: number; end?: number }
+
+export type WebData = {
+  query_id: string
+  emotion: string
+  energy: number
+  timestamp: number
+  timezone: string
+  language_code: string
+}
+
+export enum CALLBACK_DATA {
+  openMenu = 'openMenu',
+  closeMenu = 'closeMenu',
+  backMenu = 'backMenu',
+  report = 'report',
+  weekReport = 'weekReport',
+  monthReport = 'monthReport',
+}

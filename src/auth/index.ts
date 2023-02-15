@@ -1,8 +1,7 @@
 import { getTypedEnv } from '../utils/common'
 import jwt from 'jsonwebtoken'
 
-export const getToken = (data: object) =>
-  jwt.sign(data, getTypedEnv<string>('JWT_KEY'))
+export const getToken = (data: object) => jwt.sign(data, getTypedEnv('JWT_KEY'))
 
 export const createBearer = (id: number) => `Bearer ${getToken({ id })}`
 

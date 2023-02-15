@@ -1,7 +1,7 @@
 import i18n from 'i18n'
 import * as en from '../messages/en'
 import * as ru from '../messages/ru'
-import { Emotions } from './localeService.types'
+import { Emotions } from './locale.types'
 
 export class LocaleService {
   i18nProvider = i18n
@@ -24,7 +24,7 @@ export class LocaleService {
     return this.i18nProvider.getLocales()
   }
 
-  translate(text: string) {
+  translate(text: keyof typeof en) {
     return this.i18nProvider.__(text)
   }
 
@@ -41,6 +41,6 @@ const localeService = new LocaleService({
   defaultLocale: 'en',
 })
 
-export const translate = localeService.translate.bind(localeService)
+export const t = localeService.translate.bind(localeService)
 
 export default localeService

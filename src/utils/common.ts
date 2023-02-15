@@ -1,4 +1,6 @@
+import { URLWithToken } from '../auth'
 import { logger } from '../middleware/logger'
+import { Env } from '../.env-types'
 
 export const errorHandler =
   (typeException: string) => (error: unknown, method: string, data: object) => {
@@ -15,26 +17,31 @@ export const errorHandler =
     throw error
   }
 
-export const getTypedEnv = <T extends string | number | boolean>(
-  envName: string,
-): T => {
+export const getTypedEnv = <T extends keyof Env>(envName: T): Env[T] => {
   const env = process.env[envName]
 
   if (env === void 0)
     throw new Error(`Environment variable '${envName}' not found`)
 
-  const lowCaseEnv = env.toLowerCase()
-  if (lowCaseEnv === 'true' || lowCaseEnv === 'false') {
-    return (lowCaseEnv === 'true') as T
+  if (env === 'true' || env === 'false') {
+    return env === 'true'
   }
 
   const numberEnv = Number(env)
 
   if (env.length && !isNaN(numberEnv)) {
-    return numberEnv as T
+    return numberEnv
   }
 
-  return env as T
+  return env
 }
 
-export const isDev = <boolean>getTypedEnv('DEV')
+export const isDev = getTypedEnv('DEV')
+
+export const createURL = (id: number | undefined, path = '/') => {
+  if (!id) {
+    throw new Error('ID undefined')
+  }
+
+  return new URLWithToken({ id }, path, getTypedEnv('WEB_APP_URL')).toString()
+}
