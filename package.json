@@ -69,5 +69,8 @@
     "trailingComma": "all",
     "arrowParens": "avoid",
     "endOfLine": "lf"
+  },
+  "lint-staged": {
+    "*.ts": "eslint --cache"
   }
 }
