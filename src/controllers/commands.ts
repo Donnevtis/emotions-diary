@@ -22,6 +22,7 @@ bot.start(async ctx => {
         ],
       ],
     },
+    parse_mode: 'HTML',
   })
 })
 

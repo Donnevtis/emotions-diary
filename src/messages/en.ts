@@ -1,11 +1,13 @@
 export const GREETING = `
-Hey there! I'm an emotion diary bot here to assist you in getting to know yourself and your emotions better. With me, you can track your feelings and share your story with a therapist.
+Hey there! I'm an Emotion Diary Bot and I'm here to help you understed yourself better. With me you can dive deeper into your feelings, track them and reflex your story.
 
 Here are some of the things you can do with me:
+• Record your Feelings and Energy level - press <b>Start</b>
+• Send a weekly report by typing /weeklyreport
+• Send a monthly report by typing /monthlyreport
+• Change your reminder settings by typing /reminder
 
-- Send a weekly report by typing /weeklyreport
-- Send a monthly report by typing /monthlyreport
-- Change your reminder settings by typing /reminder
+Remember to give yourself time and be patient as you work through your emotions.
 
 If you have any issues or suggestions, just let me know by typing @hay_sup.
 `
