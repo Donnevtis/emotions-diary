@@ -1,12 +1,19 @@
-interface ProcessEnv {
-  [key: keyof NodeJS.ProcessEnv]: any
+declare global {
+  namespace NodeJS {
+    interface ProcessEnv extends EnvDict {}
+  }
 }
 
-export interface Env extends ProcessEnv {
+type EnvDict = {
+  [key in keyof Env]: string
+}
+
+export interface Env {
   DEV: boolean
   OAUTH_TOKEN: string
   FUNCTION_ID: string
   BOT_TOKEN: string
+  BOT_TOKEN_DEV: string
   BOT_URL: string
   SA_ID: string
   LOCKBOX_ID: string

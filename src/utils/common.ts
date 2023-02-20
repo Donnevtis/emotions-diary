@@ -24,19 +24,19 @@ export const getTypedEnv = <T extends keyof Env>(envName: T): Env[T] => {
     throw new Error(`Environment variable '${envName}' not found`)
 
   if (env === 'true' || env === 'false') {
-    return env === 'true'
+    return (env === 'true') as Env[T]
   }
 
   const numberEnv = Number(env)
 
   if (env.length && !isNaN(numberEnv)) {
-    return numberEnv
+    return numberEnv as unknown as Env[T]
   }
 
-  return env
+  return env as Env[T]
 }
 
-export const isDev = getTypedEnv('DEV')
+export const isDev = getTypedEnv('BOT_URL')
 
 export const createURL = (
   id: number | undefined,
