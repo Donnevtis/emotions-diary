@@ -55,6 +55,12 @@ const inlineKeyboard = {
       ],
       [
         {
+          text: t('LANG_SETTINGS'),
+          callback_data: CALLBACK_DATA.settings,
+        },
+      ],
+      [
+        {
           web_app: {
             url: createURL(userId),
           },
@@ -84,6 +90,37 @@ const inlineKeyboard = {
           callback_data: CALLBACK_DATA.monthReport,
         },
       ],
+      [
+        {
+          text: t('BACK'),
+          callback_data: CALLBACK_DATA.backMenu,
+        },
+      ],
+    ],
+  }),
+
+  settings: () => ({
+    inline_keyboard: [
+      [
+        {
+          text: 'EN',
+          callback_data: CALLBACK_DATA.en,
+        },
+        {
+          text: 'RU',
+          callback_data: CALLBACK_DATA.ru,
+        },
+      ],
+      [
+        {
+          text: t('BACK'),
+          callback_data: CALLBACK_DATA.backMenu,
+        },
+      ],
+    ],
+  }),
+  done: () => ({
+    inline_keyboard: [
       [
         {
           text: t('BACK'),

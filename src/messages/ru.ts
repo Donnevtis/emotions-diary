@@ -46,3 +46,9 @@ export const GET_REPORT = 'Получить отчёт'
 export const REMINDERS_SETTINGS = 'Настройки уведомлений'
 
 export const CLOSE_MENU = 'Закрыть меню'
+
+export const LANG_SETTINGS = 'Настройки языка'
+
+export const LANG_SETTINGS_HINT = 'Выберете язык:'
+
+export const SETTINGS_SAVED = 'Настройки изменены.'

@@ -99,4 +99,7 @@ export enum CALLBACK_DATA {
   report = 'report',
   weekReport = 'weekReport',
   monthReport = 'monthReport',
+  settings = 'settings',
+  ru = 'ru',
+  en = 'en',
 }

@@ -46,3 +46,9 @@ export const GET_REPORT = 'Get report'
 export const REMINDERS_SETTINGS = 'Reminders settings'
 
 export const CLOSE_MENU = 'Close menu'
+
+export const LANG_SETTINGS = 'Language settings'
+
+export const LANG_SETTINGS_HINT = 'Select language:'
+
+export const SETTINGS_SAVED = 'Settings saved.'
