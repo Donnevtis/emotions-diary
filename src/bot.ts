@@ -2,11 +2,13 @@ import { Telegraf } from 'telegraf'
 import logger from './middleware/logger'
 import userHandler from './middleware/user-handler'
 import collector from './middleware/stat-collector'
-import { getTypedEnv } from './utils/common'
+import { getTypedEnv, isDev } from './utils/common'
 import replies, { MyContext } from './middleware/replies'
 import updateMenuButton from './middleware/update-menu-button'
 
-const bot = new Telegraf<MyContext>(getTypedEnv('BOT_TOKEN'), {
+const token = isDev ? 'BOT_TOKEN_DEV' : 'BOT_TOKEN'
+
+const bot = new Telegraf<MyContext>(getTypedEnv(token), {
   handlerTimeout: 10,
 })
 
