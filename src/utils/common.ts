@@ -1,6 +1,7 @@
 import { URLWithToken } from '../auth'
 import { logger } from '../middleware/logger'
 import { Env } from '../.env-types'
+import localeService from '../services/locale'
 
 export const errorHandler =
   (typeException: string) => (error: unknown, method: string, data: object) => {
@@ -47,6 +48,8 @@ export const createURL = (
     throw new Error('ID undefined')
   }
   const url = new URLWithToken({ id }, path, getTypedEnv('WEB_APP_URL'))
+
+  url.searchParams.set('lang', localeService.locale)
 
   if (searchParams) {
     Object.entries(searchParams).forEach(([key, value]) =>

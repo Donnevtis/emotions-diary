@@ -1,10 +1,13 @@
 import { Context } from 'telegraf'
-import { setStatus } from '../database'
+import { getUser, setStatus } from '../database'
 import localeService from '../services/locale'
 import { PromiseNoop } from './types'
 
 export default async ({ myChatMember, from }: Context, next: PromiseNoop) => {
-  localeService.locale = from?.language_code || 'en'
+  if (from?.id) {
+    const user = await getUser(from?.id)
+    localeService.locale = user?.language_code || from?.language_code || 'en'
+  }
 
   await next()
 
