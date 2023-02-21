@@ -14,6 +14,7 @@ export const answerWebApp = (userId: number, { emotion, energy }: WebData) =>
     `🧠 ${t('FEEL')} <b>${emotion}</b>.
 ⚡️ ${t('ENERGY')}: <b>${energy}</b>`,
     {
+      disable_notification: true,
       parse_mode: 'HTML',
       reply_markup: {
         ...inlineKeyboard.newState(userId),
