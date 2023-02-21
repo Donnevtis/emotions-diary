@@ -43,6 +43,7 @@ bot.action(RegExp(`${CALLBACK_DATA.en}|${CALLBACK_DATA.ru}`), async ctx => {
     await updateLanguageSettings(ctx.from?.id, localeService.locale)
     await ctx.editMessageText(t('SETTINGS_SAVED'))
     await ctx.editMessageReplyMarkup(inlineKeyboard.done())
+    await ctx.updateChatMenuButton()
   } else {
     await ctx.replyTrouble()
   }
