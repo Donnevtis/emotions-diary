@@ -6,11 +6,15 @@ Here are some of the things you can do with me:
 • Send a weekly report by typing /weeklyreport
 • Send a monthly report by typing /monthlyreport
 • Change your reminder settings by typing /reminder
+• Open menu /menu
 
 Remember to give yourself time and be patient as you work through your emotions.
 
 If you have any issues or suggestions, just let me know by typing @hay_sup.
 `
+// prettier-ignore
+export const MISS = 'I\'m not sure what it means, but this is what I can:'
+
 export const MENU_BUTTON_TEXT = 'New emotion'
 
 export const START = 'Start'

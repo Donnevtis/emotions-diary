@@ -3,6 +3,7 @@ import { t } from '../services/locale'
 import { createURL } from '../utils/common'
 import { putUser } from '../database/'
 import { PATHS } from '../types'
+import inlineKeyboard from '../messages/inline-keyboard'
 
 bot.start(async ctx => {
   const id = ctx.from.id
@@ -43,6 +44,14 @@ bot.command('reminder', async ctx =>
           },
         ],
       ],
+    },
+  }),
+)
+
+bot.command('menu', ctx =>
+  ctx.reply(t('MENU'), {
+    reply_markup: {
+      ...inlineKeyboard.openMenu(ctx.from?.id),
     },
   }),
 )
