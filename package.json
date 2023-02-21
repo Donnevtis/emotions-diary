@@ -1,6 +1,6 @@
 {
   "name": "emotions-diary-bot",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Emotions diary telegram bot",
   "main": "./dist/index.js",
   "type": "module",
