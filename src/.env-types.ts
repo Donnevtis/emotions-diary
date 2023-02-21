@@ -19,4 +19,5 @@ export interface Env {
   LOCKBOX_ID: string
   LOCKBOX_VERSION: string
   WEB_APP_URL: string
+  JWT_KEY: string
 }
