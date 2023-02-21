@@ -1,9 +1,59 @@
-import TelegramBot from 'node-telegram-bot-api'
+import bot from './bot'
+import { logger } from './middleware/logger'
+import './controllers'
+import { errorHandler, isDev } from './utils/common'
+import { Handler, WebData } from './types'
+import { answerWebApp } from './controllers/web-data'
+import localeService from './services/locale'
 
-const polling = process.env.MODE === 'development'
-const token = String(process.env.BOT_TOKEN)
-const bot = new TelegramBot(token, { polling })
+if (isDev) {
+  bot.launch()
+}
 
-bot.on('message', msg => {
-  bot.sendMessage(msg.chat.id, msg.text || 'hi')
+bot.catch(error => logger.error(error))
+
+const updateHandlerError = errorHandler('Bot handle update exception')
+const webDataHandlerError = errorHandler('Web data handle exception')
+const answer = (statusCode: number, body = '') => ({
+  statusCode,
+  body,
 })
+
+export const handler: Handler = async ({
+  body,
+  requestContext: { apiGateway, authorizer },
+}) => {
+  if (!body) return answer(400)
+
+  if (apiGateway?.operationContext?.webData) {
+    const data = JSON.parse(body) as WebData
+    const userId = authorizer?.userId
+    localeService.locale = data.language_code
+
+    try {
+      if (!userId) {
+        throw new Error('ID not found')
+      }
+
+      await answerWebApp(userId, data)
+    } catch (error) {
+      webDataHandlerError(error, answerWebApp.name, { body })
+
+      return answer(400)
+    }
+
+    return answer(200)
+  }
+
+  const data = JSON.parse(body)
+
+  try {
+    await bot.handleUpdate(data)
+  } catch (error) {
+    updateHandlerError(error, bot.handleUpdate.name, { body })
+
+    return answer(400)
+  }
+
+  return answer(200)
+}

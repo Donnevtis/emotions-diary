@@ -2,10 +2,9 @@
   "jsc": {
     "parser": {
       "syntax": "typescript"
-    },
-    "target": "es2021"
+    }
   },
   "module": {
-    "type": "commonjs"
+    "type": "es6"
   }
 }

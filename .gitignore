@@ -1,6 +1,8 @@
 /node_modules
 /dist
+/scripts/dist
 
 .env
 config.json
 sa_name.json
+.eslintcache

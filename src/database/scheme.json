@@ -1,0 +1,55 @@
+{
+  "$metadata": {
+    "httpStatusCode": 200,
+    "requestId": "03179ba7-41ba-4b9a-85c1-c43952654f95",
+    "attempts": 1,
+    "totalRetryDelay": 0
+  },
+  "TableDescription": {
+    "AttributeDefinitions": [
+      {
+        "AttributeName": "PK",
+        "AttributeType": "S"
+      },
+      {
+        "AttributeName": "SK",
+        "AttributeType": "S"
+      }
+    ],
+    "CreationDateTime": "2023-02-06T21:57:28.870Z",
+    "GlobalSecondaryIndexes": [
+      {
+        "IndexName": "InvertedIndex",
+        "IndexStatus": "ACTIVE",
+        "ItemCount": 0,
+        "KeySchema": [
+          {
+            "AttributeName": "SK",
+            "KeyType": "HASH"
+          },
+          {
+            "AttributeName": "PK",
+            "KeyType": "RANGE"
+          }
+        ],
+        "Projection": {
+          "ProjectionType": "ALL"
+        }
+      }
+    ],
+    "ItemCount": 0,
+    "KeySchema": [
+      {
+        "AttributeName": "PK",
+        "KeyType": "HASH"
+      },
+      {
+        "AttributeName": "SK",
+        "KeyType": "RANGE"
+      }
+    ],
+    "TableName": "Users",
+    "TableSizeBytes": 0,
+    "TableStatus": "ACTIVE"
+  }
+}
