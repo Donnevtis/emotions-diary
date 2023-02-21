@@ -37,7 +37,7 @@ export const getTypedEnv = <T extends keyof Env>(envName: T): Env[T] => {
   return env as Env[T]
 }
 
-export const isDev = getTypedEnv('BOT_URL')
+export const isDev = getTypedEnv('DEV')
 
 export const createURL = (
   id: number | undefined,
