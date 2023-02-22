@@ -8,7 +8,7 @@ type EnvDict = {
   [key in keyof Env]: string
 }
 
-export interface Env {
+export type Env = {
   DEV: boolean
   OAUTH_TOKEN: string
   FUNCTION_ID: string

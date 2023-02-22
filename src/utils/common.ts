@@ -30,7 +30,7 @@ export const getTypedEnv = <T extends keyof Env>(envName: T): Env[T] => {
 
   const numberEnv = Number(env)
 
-  if (env.length && !isNaN(numberEnv)) {
+  if (!isNaN(numberEnv)) {
     return numberEnv as unknown as Env[T]
   }
 
