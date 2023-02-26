@@ -16,7 +16,12 @@ import {
   validateUser,
 } from '../utils/validators'
 import { errorHandler } from '../utils/common'
-import { ChatMemberStatus, RecievedUser, UserState } from '../types'
+import {
+  ChatMemberStatus,
+  RecievedUser,
+  StoredState,
+  UserState,
+} from '../types'
 import { StoredUser, UserTimersSettings } from '../types'
 import crypto from 'node:crypto'
 
@@ -258,7 +263,7 @@ export const getStateById = async (
     const { Items, LastEvaluatedKey } = await dynamodb.send(input)
 
     const states = Items?.length
-      ? (Items.map(emotion => unmarshall(emotion)) as UserState[])
+      ? (Items.map(emotion => unmarshall(emotion)) as StoredState[])
       : null
 
     if (LastEvaluatedKey) {
@@ -315,7 +320,7 @@ export const addState = (id: number, state: UserState) => {
     )
 }
 
-export const updateState = (id: number, state: UserState) => {
+export const updateState = (id: number, state: StoredState) => {
   if (!validateState(state)) {
     throw new Error('Validation exception: invalid state data', {
       cause: validateState.errors,

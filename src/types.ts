@@ -44,8 +44,15 @@ export type UserState = {
   energy: number
   timestamp: number
   timezone: string
-  state_id?: string
 }
+
+export type WebData = {
+  language_code: string
+} & UserState
+
+export type StoredState = {
+  state_id: string
+} & UserState
 
 export type ChatMemberStatus =
   | 'creator'
@@ -82,15 +89,6 @@ export type UserTimersSettings = {
 }
 
 export type Ranges = { start?: number; end?: number }
-
-export type WebData = {
-  query_id: string
-  emotion: string
-  energy: number
-  timestamp: number
-  timezone: string
-  language_code: string
-}
 
 export enum CALLBACK_DATA {
   openMenu = 'openMenu',

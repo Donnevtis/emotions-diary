@@ -32,7 +32,6 @@ const stateSchema: JSONSchemaType<UserState> = {
     energy: { type: 'number' },
     timestamp: { type: 'number' },
     timezone: { type: 'string' },
-    state_id: { type: 'string', nullable: true },
   },
   required: ['emotion', 'timestamp', 'energy'],
 }

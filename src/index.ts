@@ -26,16 +26,17 @@ export const handler: Handler = async ({
   if (!body) return answer(400)
 
   if (apiGateway?.operationContext?.webData) {
-    const data = JSON.parse(body) as WebData
     const userId = authorizer?.userId
-    localeService.locale = data.language_code
+    const data = JSON.parse(body) as WebData
+    const { language_code, ...webData } = data
+    localeService.locale = language_code || 'en'
 
     try {
       if (!userId) {
         throw new Error('ID not found')
       }
 
-      await answerWebApp(userId, data)
+      await answerWebApp(userId, webData)
     } catch (error) {
       webDataHandlerError(error, answerWebApp.name, { body })
 
